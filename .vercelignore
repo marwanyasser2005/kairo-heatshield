@@ -1,0 +1,6 @@
+work/
+outputs/
+coverage/
+*.log
+.vercel-auth/
+.env*
