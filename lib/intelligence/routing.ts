@@ -116,7 +116,7 @@ export function findRoute(zones: HeatZoneFeature[], startId: string, endId: stri
   const reduction = shortest.peakTemperatureC - coolest.peakTemperatureC;
   const recommendation =
     exposureReduction > 0
-      ? `The coolest path lowers cumulative heat exposure by ${exposureReduction} index-points${reduction > 0 ? ` and the peak temperature by ${reduction.toFixed(1)}°C` : ""}, at the cost of ${distanceAddedKm.toFixed(2)} km. This is a screening aid for pedestrian routing—not a navigation or safety directive.`
+      ? `The coolest path lowers cumulative heat exposure by ${exposureReduction} index-points${reduction > 0 ? ` and the peak temperature by ${reduction.toFixed(1)}°C` : ""}, at the cost of ${distanceAddedKm.toFixed(2)} km. This is a screening aid for pedestrian routing, not a navigation or safety directive.`
       : `The shortest and coolest paths coincide here. Heat exposure is comparable on both options.`;
   return { start: toStop(features[startIndex]), end: toStop(features[endIndex]), shortest, coolest, exposureReduction, distanceAddedKm, recommendation };
 }

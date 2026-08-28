@@ -46,4 +46,4 @@ Optionally open **Analyst** to show the bounded tool trace.
 
 ## 02:50–03:00 — Final line
 
-“FortyGuard provides the temperature intelligence. KAIRO turns it into decisions—without hiding where the evidence ends and the scenario begins.”
+“FortyGuard provides the temperature intelligence. KAIRO turns it into decisions while keeping the boundary between evidence and scenario visible.”

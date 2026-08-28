@@ -19,7 +19,7 @@ import { IconTile } from "@/components/ui/icon-tile";
 import { Progress } from "@/components/ui/progress";
 import { cn, formatNumber } from "@/lib/utils";
 
-import HeatMap from "@/components/maps/heat-map";
+import HeatMap, { type LayerMode } from "@/components/maps/heat-map";
 
 export type WorkspaceView = "dashboard" | "map" | "hotspots" | "routes" | "environment" | "correlations" | "insights" | "scenarios" | "actions" | "analyst";
 
@@ -27,13 +27,13 @@ const viewMeta: Record<WorkspaceView, { eyebrow: string; title: string; descript
   dashboard: { eyebrow: "See → Explain → Prioritize → Act", title: "Phoenix at a glance", description: "Where heat is building, which zones stand out, and what makes them worth a closer look." },
   map: { eyebrow: "Explore the city", title: "Phoenix heat field", description: "Move block by block between temperature, canopy, hotspots, and the evidence attached to each zone." },
   hotspots: { eyebrow: "What rises to the top", title: "Hotspot ranking", description: "Temperature matters, but it is not the whole story. Persistence, local deviation, surrounding intensity, and exposure shape the order." },
-  routes: { eyebrow: "Track 01 · Cool route planner", title: "Cool route planner", description: "Compare the shortest pedestrian path with the lowest-exposure alternative. A screening aid for movement—not a navigation or safety directive." },
+  routes: { eyebrow: "Track 01 · Cool route planner", title: "Cool route planner", description: "Compare the shortest pedestrian path with the lowest-exposure alternative. This is a screening aid for movement, not a navigation or safety directive." },
   environment: { eyebrow: "Look beyond temperature", title: "The city around the heat", description: "Compare built form, hard surfaces, Phoenix canopy, humidity, and population context around the leading zones." },
   correlations: { eyebrow: "Track 07 · Analysis & correlation", title: "What moves with heat?", description: "Inspect Pearson and Spearman results, sample size, and the caveats that keep association from becoming a causal claim." },
   insights: { eyebrow: "Read the finding, then the proof", title: "What the evidence suggests", description: "Each finding keeps its supporting values, plain-language interpretation, source, and limits close by." },
-  scenarios: { eyebrow: "Track 01 · Digital twin simulation", title: "Cooling scenario lab", description: "Test what a canopy, cool-roof, shade, or surface-albedo package could mean for one zone. A screening estimate with uncertainty—not a forecast or a construction spec." },
+  scenarios: { eyebrow: "Track 01 · Digital twin simulation", title: "Cooling scenario lab", description: "Test what a canopy, cool-roof, shade, or surface-albedo package could mean for one zone. Results are screening estimates with uncertainty, not forecasts or construction specifications." },
   actions: { eyebrow: "From ranking to fieldwork", title: "What to investigate next", description: "Three assessment paths for the highest-priority zones. They guide the next question; they do not promise an outcome." },
-  analyst: { eyebrow: "Track 06 · Agentic AI", title: "Interrogate the evidence", description: "A bounded agent routes questions to local analytical tools—without inventing numbers or depending on an LLM." },
+  analyst: { eyebrow: "Track 06 · Agentic AI", title: "Interrogate the evidence", description: "A bounded agent routes questions to local analytical tools. It does not invent measurements or depend on a runtime LLM." },
 };
 
 function severityTone(severity: Severity) {
@@ -141,7 +141,7 @@ function DataControl({ capabilities, onLiveComplete, cityId, activeLabel }: { ca
           <Button variant="secondary" className="w-full" onClick={openVerifiedActivity} disabled={status === "queued" || status === "processing"}><CheckCircle2 className="size-4 shrink-0" /><span className="truncate">Open verified result</span></Button>
           <Button className="w-full" onClick={runLive} disabled={status === "queued" || status === "processing"}><Radio className="size-4 shrink-0" /><span className="truncate">Run new TCM</span></Button>
         </div>
-        <p className="mt-3 text-[11px] leading-5 text-zinc-400">LIVE appears only after a completed, normalized FortyGuard response. The Phoenix Scenario is never substituted silently.</p>
+        <p className="mt-3 text-[11px] leading-5 text-zinc-400">Live Mode appears only after a completed, normalized FortyGuard response. KAIRO never replaces it silently with scenario data.</p>
       </div>}
     </div>
   );
@@ -217,14 +217,14 @@ function SelectedZonePanel({ zone, rank }: { zone: HeatZoneCollection["features"
   return <Card className="h-full"><CardHeader><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><Badge tone={severityTone(properties.model.heatExposureCategory)}>{properties.model.heatExposureCategory}</Badge>{rank && <Badge tone="neutral">Priority {rank}</Badge>}</div><h2 className="mt-3 truncate text-xl font-black">{properties.name}</h2><p className="mt-1 truncate text-xs text-zinc-500">{properties.id} · {properties.district}</p></div><IconTile><Crosshair /></IconTile></CardHeader><CardContent className="space-y-5"><div className="grid grid-cols-2 gap-3">{[{ label: "Temperature", value: `${properties.observed.temperatureC.toFixed(1)}°C` }, { label: "Exposure", value: `${properties.model.heatExposureScore}/100` }, { label: "Persistence", value: `${properties.observed.persistenceHours}h` }, { label: "Anomaly", value: `+${properties.derived.temporalDeviationC.toFixed(1)}°C` }].map((item) => <div key={item.label} className="min-w-0 rounded-lg border border-white/[0.07] bg-black/20 p-3"><p className="truncate text-[10px] uppercase tracking-[.14em] text-zinc-600">{item.label}</p><p className="metric-number mt-2 truncate text-lg font-bold">{item.value}</p></div>)}</div><div><div className="flex items-center justify-between text-xs"><span className="text-zinc-500">Built density</span><span>{properties.urban.builtDensityPct.toFixed(0)}%</span></div><Progress value={properties.urban.builtDensityPct} className="mt-2" /></div><div><div className="flex items-center justify-between text-xs"><span className="text-zinc-500">Tree canopy · City of Phoenix</span><span>{properties.urban.vegetationPct.toFixed(1)}%</span></div><Progress value={properties.urban.vegetationPct * 3} className="mt-2 [&>div]:bg-lime-400" /></div><div className="rounded-lg border border-cyan-300/10 bg-cyan-300/[0.035] p-4"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-cyan-200">Why this matters</p><p className="mt-2 text-xs leading-5 text-zinc-400">Observed heat, persistence, local deviation, built context, canopy, and population exposure jointly contribute to the zone&apos;s current analytical priority.</p></div><p className="text-[10px] leading-4 text-zinc-600">Source: {properties.source}</p></CardContent></Card>;
 }
 
-function DashboardView({ data, selectedId, setSelectedId }: { data: DashboardData; selectedId: string; setSelectedId: (id: string) => void }) {
+function DashboardView({ data, selectedId, setSelectedId, initialLayerMode }: { data: DashboardData; selectedId: string; setSelectedId: (id: string) => void; initialLayerMode: LayerMode }) {
   const selected = data.zones.features.find((zone) => zone.properties.id === selectedId) ?? data.zones.features[0];
-  return <div className="space-y-4"><MetricGrid data={data} /><div className="grid gap-4 2xl:grid-cols-[1.55fr_.45fr]"><Card className="border-beam overflow-hidden"><CardHeader><div className="flex min-w-0 items-center gap-3"><IconTile><Crosshair /></IconTile><div className="min-w-0"><p className="truncate text-[9px] font-black uppercase tracking-[.2em] text-zinc-600">Phoenix operating picture</p><h2 className="mt-1 truncate text-lg font-bold">Heat exposure field</h2></div></div><div className="flex shrink-0 items-center gap-2"><span className="signal-pulse size-2 rounded-full bg-emerald-400" /><Badge tone="demo">30 zones · 3 hotspots</Badge></div></CardHeader><CardContent className="p-2 xl:p-2"><HeatMap zones={data.zones} hotspots={data.hotspots} selectedId={selectedId} onSelect={setSelectedId} className="min-h-[560px]" /></CardContent></Card><SelectedZonePanel zone={selected} rank={data.hotspots.find((item) => item.id === selected.properties.id)?.rank} /></div><div className="grid gap-4 xl:grid-cols-[1.25fr_.75fr]"><Card className="bento-card"><CardHeader><div><p className="text-xs font-bold uppercase tracking-[.18em] text-zinc-600">Temporal analysis</p><h2 className="mt-2 text-lg font-bold">Observed vs local baseline</h2></div><div className="flex gap-3 text-[10px] uppercase tracking-[.14em]"><span className="text-orange-300">— Observed</span><span className="text-cyan-200">-- Baseline</span></div></CardHeader><CardContent><TemporalTrend data={data.temporalSeries} /></CardContent></Card><Card className="bento-card"><CardHeader><div><p className="text-xs font-bold uppercase tracking-[.18em] text-zinc-600">Priority queue</p><h2 className="mt-2 text-lg font-bold">Top 3 hotspots</h2></div></CardHeader><CardContent className="space-y-2">{data.hotspots.slice(0, 3).map((hotspot) => <button key={hotspot.id} onClick={() => setSelectedId(hotspot.id)} className="flex min-h-16 w-full cursor-pointer items-center gap-3 rounded-xl border border-white/[0.07] bg-black/15 p-3 text-left transition-all hover:border-orange-300/15 hover:bg-orange-300/[0.035] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"><span className="grid size-9 shrink-0 place-items-center rounded-lg bg-orange-300/10 text-sm font-black text-orange-200">{hotspot.rank}</span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{hotspot.name}</span><span className="mt-1 block truncate text-xs text-zinc-600">{hotspot.observed.temperatureC.toFixed(1)}°C · {hotspot.observed.persistenceHours}h persistence</span></span><span className="metric-number shrink-0 text-sm font-bold text-cyan-200">{hotspot.model.priorityScore}</span></button>)}</CardContent></Card></div><div className="rounded-xl border border-amber-300/10 bg-amber-300/[0.03] px-4 py-3 text-xs leading-5 text-amber-100/70"><Info className="mr-2 inline size-3.5" />{HEAT_EXPOSURE_DISCLAIMER}</div></div>;
+  return <div className="space-y-4"><MetricGrid data={data} /><div className="grid gap-4 2xl:grid-cols-[1.55fr_.45fr]"><Card className="border-beam overflow-hidden"><CardHeader><div className="flex min-w-0 items-center gap-3"><IconTile><Crosshair /></IconTile><div className="min-w-0"><p className="truncate text-[9px] font-black uppercase tracking-[.2em] text-zinc-500">Phoenix operating picture</p><h2 className="mt-1 truncate text-lg font-bold">Heat exposure field</h2></div></div><div className="flex shrink-0 items-center gap-2"><span className="signal-pulse size-2 rounded-full bg-emerald-400" /><Badge tone="demo">30 zones · 3 hotspots</Badge></div></CardHeader><CardContent className="p-2 xl:p-2"><HeatMap zones={data.zones} hotspots={data.hotspots} selectedId={selectedId} onSelect={setSelectedId} initialLayerMode={initialLayerMode} className="min-h-[520px] lg:min-h-[560px]" /></CardContent></Card><SelectedZonePanel zone={selected} rank={data.hotspots.find((item) => item.id === selected.properties.id)?.rank} /></div><div className="grid gap-4 xl:grid-cols-[1.25fr_.75fr]"><Card className="bento-card"><CardHeader><div><p className="text-xs font-bold uppercase tracking-[.18em] text-zinc-500">Temporal analysis</p><h2 className="mt-2 text-lg font-bold">Observed vs local baseline</h2></div><div className="flex gap-3 text-[10px] uppercase tracking-[.14em]"><span className="inline-flex items-center gap-1.5 text-orange-300"><span className="h-0.5 w-4 bg-orange-300" />Observed</span><span className="inline-flex items-center gap-1.5 text-cyan-200"><span className="w-4 border-t border-dashed border-cyan-200" />Baseline</span></div></CardHeader><CardContent><TemporalTrend data={data.temporalSeries} /></CardContent></Card><Card className="bento-card"><CardHeader><div><p className="text-xs font-bold uppercase tracking-[.18em] text-zinc-500">Priority queue</p><h2 className="mt-2 text-lg font-bold">Top 3 hotspots</h2></div></CardHeader><CardContent className="space-y-2">{data.hotspots.slice(0, 3).map((hotspot) => <button key={hotspot.id} onClick={() => setSelectedId(hotspot.id)} className="flex min-h-16 w-full cursor-pointer items-center gap-3 rounded-xl border border-white/[0.07] bg-black/15 p-3 text-left transition-all hover:border-orange-300/15 hover:bg-orange-300/[0.035] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"><span className="grid size-9 shrink-0 place-items-center rounded-lg bg-orange-300/10 text-sm font-black text-orange-200">{hotspot.rank}</span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{hotspot.name}</span><span className="mt-1 block truncate text-xs text-zinc-500">{hotspot.observed.temperatureC.toFixed(1)}°C · {hotspot.observed.persistenceHours}h persistence</span></span><span className="metric-number shrink-0 text-sm font-bold text-cyan-200">{hotspot.model.priorityScore}</span></button>)}</CardContent></Card></div><div className="rounded-xl border border-amber-300/10 bg-amber-300/[0.03] px-4 py-3 text-xs leading-5 text-amber-100/75"><Info className="mr-2 inline size-3.5" />{HEAT_EXPOSURE_DISCLAIMER}</div></div>;
 }
 
-function MapView({ data, selectedId, setSelectedId }: { data: DashboardData; selectedId: string; setSelectedId: (id: string) => void }) {
+function MapView({ data, selectedId, setSelectedId, initialLayerMode }: { data: DashboardData; selectedId: string; setSelectedId: (id: string) => void; initialLayerMode: LayerMode }) {
   const selected = data.zones.features.find((zone) => zone.properties.id === selectedId) ?? data.zones.features[0];
-  return <div className="grid gap-4 2xl:grid-cols-[1fr_360px]"><HeatMap zones={data.zones} hotspots={data.hotspots} selectedId={selectedId} onSelect={setSelectedId} className="min-h-[max(430px,calc(100dvh-250px))]" /><SelectedZonePanel zone={selected} rank={data.hotspots.find((item) => item.id === selectedId)?.rank} /></div>;
+  return <div className="grid gap-4 2xl:grid-cols-[1fr_360px]"><HeatMap zones={data.zones} hotspots={data.hotspots} selectedId={selectedId} onSelect={setSelectedId} initialLayerMode={initialLayerMode} className="min-h-[max(430px,calc(100dvh-250px))]" /><SelectedZonePanel zone={selected} rank={data.hotspots.find((item) => item.id === selectedId)?.rank} /></div>;
 }
 
 function HotspotsView({ data, setSelectedId }: { data: DashboardData; setSelectedId: (id: string) => void }) {
@@ -249,7 +249,7 @@ function ActionsView({ data }: { data: DashboardData }) {
   const exportBrief = () => {
     const top = data.hotspots[0];
     const lines = [
-      "KAIRO HEATSHIELD — FIELD ASSESSMENT BRIEF",
+      "KAIRO HEATSHIELD | FIELD ASSESSMENT BRIEF",
       "Phoenix, Arizona · Demo analysis · 15 Jul 2025 16:00 MST",
       "",
       `Priority 1: ${top.name} (${top.id})`,
@@ -278,7 +278,7 @@ function ActionsView({ data }: { data: DashboardData }) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
-  return <div className="space-y-4"><div className="flex items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-zinc-600">Field assessment</p><p className="mt-1 text-sm text-zinc-500">Export a one-page brief for the priority zone.</p></div><Button variant="secondary" onClick={exportBrief}><FileDown className="size-4" />Export field brief</Button></div><div className="grid gap-4 xl:grid-cols-3">{data.actions.map((action) => <Card key={action.zoneId} className={cn(action.priority === 1 && "border-orange-300/20")}><CardHeader><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-orange-200">Priority {action.priority}</p><h2 className="mt-3 text-xl font-black">{action.zone}</h2></div><span className="metric-number text-4xl font-black text-zinc-800">0{action.priority}</span></CardHeader><CardContent><Badge tone={severityTone(action.risk)}>{action.risk} analytical risk</Badge><div className="mt-6 rounded-xl border border-cyan-300/10 bg-cyan-300/[0.035] p-4"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-cyan-200">Potential intervention</p><p className="mt-2 font-semibold">{action.intervention}</p></div><ul className="mt-5 space-y-3">{action.evidence.slice(0, 3).map((item) => <li key={item} className="flex gap-3 text-xs leading-5 text-zinc-400"><CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-cyan-300" />{item}</li>)}</ul><p className="mt-5 text-xs leading-5 text-zinc-500">{action.reason}</p></CardContent></Card>)}</div><Card><CardHeader><div><p className="text-xs font-bold uppercase tracking-[.18em] text-zinc-600">Decision guardrails</p><h2 className="mt-2 text-lg font-bold">What this plan does—and does not—say</h2></div><ShieldCheck className="size-5 text-cyan-300" /></CardHeader><CardContent className="grid gap-4 text-sm leading-6 text-zinc-400 md:grid-cols-3"><p><strong className="block text-white">Assessment first</strong>Recommendations direct further design and monitoring work; they are not construction instructions.</p><p><strong className="block text-white">No guaranteed cooling</strong>KAIRO does not estimate a promised temperature reduction from any intervention.</p><p><strong className="block text-white">No health-impact claim</strong>Population is exposure context only; no illness, mortality, or safety outcome is inferred.</p></CardContent></Card></div>;
+  return <div className="space-y-4"><div className="flex items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-zinc-600">Field assessment</p><p className="mt-1 text-sm text-zinc-500">Export a one-page brief for the priority zone.</p></div><Button variant="secondary" onClick={exportBrief}><FileDown className="size-4" />Export field brief</Button></div><div className="grid gap-4 xl:grid-cols-3">{data.actions.map((action) => <Card key={action.zoneId} className={cn(action.priority === 1 && "border-orange-300/20")}><CardHeader><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-orange-200">Priority {action.priority}</p><h2 className="mt-3 text-xl font-black">{action.zone}</h2></div><span className="metric-number text-4xl font-black text-zinc-800">0{action.priority}</span></CardHeader><CardContent><Badge tone={severityTone(action.risk)}>{action.risk} analytical risk</Badge><div className="mt-6 rounded-xl border border-cyan-300/10 bg-cyan-300/[0.035] p-4"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-cyan-200">Potential intervention</p><p className="mt-2 font-semibold">{action.intervention}</p></div><ul className="mt-5 space-y-3">{action.evidence.slice(0, 3).map((item) => <li key={item} className="flex gap-3 text-xs leading-5 text-zinc-400"><CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-cyan-300" />{item}</li>)}</ul><p className="mt-5 text-xs leading-5 text-zinc-500">{action.reason}</p></CardContent></Card>)}</div><Card><CardHeader><div><p className="text-xs font-bold uppercase tracking-[.18em] text-zinc-600">Decision guardrails</p><h2 className="mt-2 text-lg font-bold">What this plan says, and what it does not</h2></div><ShieldCheck className="size-5 text-cyan-300" /></CardHeader><CardContent className="grid gap-4 text-sm leading-6 text-zinc-400 md:grid-cols-3"><p><strong className="block text-white">Assessment first</strong>Recommendations direct further design and monitoring work; they are not construction instructions.</p><p><strong className="block text-white">No guaranteed cooling</strong>KAIRO does not estimate a promised temperature reduction from any intervention.</p><p><strong className="block text-white">No health-impact claim</strong>Population is exposure context only; no illness, mortality, or safety outcome is inferred.</p></CardContent></Card></div>;
 }
 
 function AnalystView() {
@@ -406,7 +406,7 @@ function ScenariosView({ data, selectedId, setSelectedId }: { data: DashboardDat
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><div><p className="text-xs font-bold uppercase tracking-[.18em] text-zinc-600">Assumptions & limits</p><h2 className="mt-2 text-lg font-bold">What this simulation is—and is not</h2></div><IconTile><ShieldCheck /></IconTile></CardHeader>
+          <CardHeader><div><p className="text-xs font-bold uppercase tracking-[.18em] text-zinc-600">Assumptions & limits</p><h2 className="mt-2 text-lg font-bold">What this simulation includes and excludes</h2></div><IconTile><ShieldCheck /></IconTile></CardHeader>
           <CardContent className="space-y-3">
             <ul className="space-y-2">{result.assumptions.map((assumption) => <li key={assumption} className="flex gap-3 text-xs leading-5 text-zinc-400"><CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-cyan-300" />{assumption}</li>)}</ul>
             <div className="rounded-lg border border-amber-300/12 bg-amber-300/[0.035] p-3 text-xs leading-5 text-amber-100/70"><AlertTriangle className="mr-1.5 inline size-3.5" />{SCENARIO_DISCLAIMER}</div>
@@ -418,25 +418,79 @@ function ScenariosView({ data, selectedId, setSelectedId }: { data: DashboardDat
   );
 }
 
-function LiveResultView({ result, onDemo }: { result: NormalizedLiveHeatmap; onDemo: () => void }) {
+function LiveResultView({ result, onDemo, onCanopyScenario }: { result: NormalizedLiveHeatmap; onDemo: () => void; onCanopyScenario: () => void }) {
   const temperatures = result.zones.features.map((zone) => zone.properties.observed.temperatureC);
   const metrics = [
-    { label: "Normalized tiles", value: result.zones.features.length.toLocaleString("en-US") },
-    { label: "Maximum TCM", value: `${Math.max(...temperatures).toFixed(2)}°C` },
-    { label: "Mean TCM", value: `${result.temperatureRangeC.mean.toFixed(2)}°C` },
-    { label: "Minimum TCM", value: `${Math.min(...temperatures).toFixed(2)}°C` },
+    { label: "Tiles mapped", value: result.zones.features.length.toLocaleString("en-US"), note: "Validated geometries" },
+    { label: "Highest tile", value: `${Math.max(...temperatures).toFixed(2)}°C`, note: "Within this activity" },
+    { label: "Average", value: `${result.temperatureRangeC.mean.toFixed(2)}°C`, note: "Across mapped tiles" },
+    { label: "Lowest tile", value: `${Math.min(...temperatures).toFixed(2)}°C`, note: "Within this activity" },
   ];
   const observedAt = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Phoenix" }).format(new Date(result.analysisTimestamp));
-  return <div className="page-enter space-y-4"><div className="flex flex-col gap-4 rounded-xl border border-cyan-300/15 bg-cyan-300/[0.035] p-5 sm:flex-row sm:items-center sm:justify-between"><div><Badge tone="live">LIVE FORTYGUARD DATA</Badge><h2 className="mt-3 text-xl font-black">Verified Phoenix TCM activity</h2><p className="mt-2 max-w-3xl text-xs leading-5 text-zinc-400">Phoenix AOI · {observedAt} MST · 100 m requested granularity</p></div><Button variant="secondary" onClick={onDemo}>Open Phoenix Scenario</Button></div><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{metrics.map((metric) => <Card key={metric.label}><CardContent><p className="text-[10px] font-bold uppercase tracking-[.16em] text-zinc-500">{metric.label}</p><p className="metric-number mt-4 text-3xl font-black">{metric.value}</p></CardContent></Card>)}</div><HeatMap zones={result.zones} hotspots={[]} onSelect={() => undefined} className="min-h-[620px]" /><div className="rounded-xl border border-amber-300/10 bg-amber-300/[0.03] p-4 text-sm leading-6 text-amber-100/75"><Info className="mr-2 inline size-4" />This activity returned only verified 2 m air-temperature TCM. The map uses a clearly labeled relative scale because the observed range is only {(result.temperatureRangeC.maximum - result.temperatureRangeC.minimum).toFixed(3)}°C. Canopy, anomaly, urban context, correlations, and actions are intentionally withheld in Live Mode.</div></div>;
+  const range = result.temperatureRangeC.maximum - result.temperatureRangeC.minimum;
+
+  return (
+    <div className="page-enter space-y-4">
+      <section className="rounded-2xl border border-cyan-300/15 bg-[linear-gradient(135deg,rgba(34,211,238,.07),rgba(255,255,255,.015))] p-5 sm:p-6" aria-labelledby="live-map-title">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge tone="live">Verified FortyGuard result</Badge>
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.14em] text-emerald-200"><CheckCircle2 className="size-3.5" />Temperature available</span>
+            </div>
+            <h2 id="live-map-title" className="mt-3 text-2xl font-black">Phoenix temperature map</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-300">This completed activity contains verified 2 m air-temperature TCM. Inspect any tile for its exact value, or open the labeled Phoenix scenario to compare canopy.</p>
+            <p className="mt-2 font-mono text-[10px] uppercase tracking-[.12em] text-zinc-500">{observedAt} MST · 100 m requested granularity · Phoenix AOI</p>
+          </div>
+          <div className="grid w-full gap-2 sm:grid-cols-2 lg:w-auto">
+            <Button variant="secondary" onClick={onDemo}><Flame className="size-4" />Phoenix scenario</Button>
+            <Button onClick={onCanopyScenario}><Leaf className="size-4" />Open canopy layer</Button>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {metrics.map((metric) => (
+          <Card key={metric.label} className="bento-card">
+            <CardContent className="min-h-[124px]">
+              <p className="text-[10px] font-bold uppercase tracking-[.16em] text-zinc-400">{metric.label}</p>
+              <p className="metric-number mt-3 text-3xl font-black text-white">{metric.value}</p>
+              <p className="mt-2 text-[11px] text-zinc-500">{metric.note}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
+        <HeatMap zones={result.zones} hotspots={[]} onSelect={() => undefined} onOpenCanopyScenario={onCanopyScenario} className="min-h-[500px] lg:min-h-[620px]" />
+        <aside className="grid content-start gap-3" aria-label="How to read the live map">
+          <Card>
+            <CardHeader><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-cyan-200">How to read it</p><h3 className="mt-2 text-lg font-bold">One verified layer</h3></div><ShieldCheck className="size-5 text-emerald-300" /></CardHeader>
+            <CardContent className="space-y-4 text-sm leading-6 text-zinc-400">
+              <div className="flex gap-3"><CheckCircle2 className="mt-1 size-4 shrink-0 text-emerald-300" /><p><strong className="block text-zinc-100">Temperature is live</strong>Every colored tile comes from the normalized FortyGuard response.</p></div>
+              <div className="flex gap-3"><Info className="mt-1 size-4 shrink-0 text-cyan-300" /><p><strong className="block text-zinc-100">Color is relative</strong>The activity spans {range.toFixed(3)}°C, so color shows warmer and cooler tiles within this result.</p></div>
+              <div className="flex gap-3"><Leaf className="mt-1 size-4 shrink-0 text-lime-300" /><p><strong className="block text-zinc-100">Canopy is contextual</strong>It was not returned by this activity. The button opens the clearly labeled City of Phoenix sample.</p></div>
+            </CardContent>
+          </Card>
+          <Button className="w-full" onClick={onCanopyScenario}><Leaf className="size-4" />Compare canopy in scenario</Button>
+        </aside>
+      </div>
+    </div>
+  );
 }
 
 export function KairoWorkspace({ view, data, capabilities, cityId = "phoenix" }: { view: WorkspaceView; data: DashboardData; capabilities: CapabilityReport; cityId?: CityId }) {
   const [selectedId, setSelectedId] = useState(data.hotspots[0].id);
   const [liveResult, setLiveResult] = useState<NormalizedLiveHeatmap | null>(null);
+  const [scenarioLayerMode, setScenarioLayerMode] = useState<LayerMode>("heat");
+  const openCanopyScenario = () => {
+    setScenarioLayerMode("vegetation");
+    setLiveResult(null);
+  };
   let content: React.ReactNode;
-  if (liveResult) content = <LiveResultView result={liveResult} onDemo={() => setLiveResult(null)} />;
-  else if (view === "dashboard") content = <DashboardView data={data} selectedId={selectedId} setSelectedId={setSelectedId} />;
-  else if (view === "map") content = <MapView data={data} selectedId={selectedId} setSelectedId={setSelectedId} />;
+  if (liveResult) content = <LiveResultView result={liveResult} onDemo={() => { setScenarioLayerMode("heat"); setLiveResult(null); }} onCanopyScenario={openCanopyScenario} />;
+  else if (view === "dashboard") content = <DashboardView data={data} selectedId={selectedId} setSelectedId={setSelectedId} initialLayerMode={scenarioLayerMode} />;
+  else if (view === "map") content = <MapView data={data} selectedId={selectedId} setSelectedId={setSelectedId} initialLayerMode={scenarioLayerMode} />;
   else if (view === "hotspots") content = <HotspotsView data={data} setSelectedId={setSelectedId} />;
   else if (view === "routes") content = <RoutesView data={data} />;
   else if (view === "environment") content = <EnvironmentView data={data} />;

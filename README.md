@@ -25,7 +25,7 @@ KAIRO closes that operational gap with one legible decision chain:
 
 > **Detect → Analyze → Explain → Prioritize → Act**
 
-It combines verified FortyGuard temperature output with explicitly labeled contextual evidence, transparent scoring, route comparison, intervention screening, and concise assessment briefs. The result is a decision-support workspace designed for municipal teams—not another decorative heat map.
+It combines verified FortyGuard temperature output with explicitly labeled contextual evidence, transparent scoring, route comparison, intervention screening, and concise assessment briefs. The result is a decision-support workspace designed for municipal teams, not another decorative heat map.
 
 ## Product at a glance
 
@@ -47,7 +47,9 @@ It combines verified FortyGuard temperature output with explicitly labeled conte
 ### Verified live proof
 
 - A completed FortyGuard Phoenix TCM activity returns **1,055 normalized temperature tiles**.
-- The live map renders only values actually returned by FortyGuard—no hidden fallback or silent scenario substitution.
+- The live map renders only values actually returned by FortyGuard, with no hidden fallback or silent scenario substitution.
+- Every live tile can be inspected for its exact TCM value, with a clearly labeled relative scale for narrow observed ranges.
+- The Canopy control opens the labeled City of Phoenix scenario layer instead of presenting a disabled or ambiguous action.
 - Credentials stay server-side; the browser never receives the API key or raw upstream payload.
 - API responses pass schema validation before normalization and visualization.
 
@@ -65,7 +67,7 @@ It combines verified FortyGuard temperature output with explicitly labeled conte
 
 1. **A decision layer, not only a visualization.** Every signal continues into a priority, explanation, and next assessment step.
 2. **Evidence boundaries are visible.** Observed, derived, public-data, and modeled scenario fields remain separate and labeled.
-3. **Explainability is part of the product.** Exposure weights, median/MAD anomalies, Pearson/Spearman associations, and ranking logic are documented—not hidden behind a score.
+3. **Explainability is part of the product.** Exposure weights, median/MAD anomalies, Pearson/Spearman associations, and ranking logic are documented instead of hidden behind a score.
 4. **The Analyst is bounded.** It routes questions to deterministic local analytical tools; it does not invent measurements or depend on an unrestricted runtime LLM.
 5. **Live and scenario modes never blur.** The verified FortyGuard result proves integration; the Phoenix Scenario demonstrates the complete operational workflow.
 
@@ -133,6 +135,7 @@ Current release gate:
 - **Vitest:** 25/25 passing
 - **Production build:** successful, strict TypeScript included
 - **Responsive verification:** desktop and 375 px mobile, no horizontal overflow
+- **Interaction verification:** Canopy transition, live-tile inspection, tablet, and mobile-landscape checks
 - **Production checks:** public routes return 200; CSP and HSTS are enabled
 
 ## Documentation
@@ -148,7 +151,7 @@ Current release gate:
 
 ## Data responsibility and limitations
 
-KAIRO is a hackathon decision-support prototype. It is **not** a certified safety, health, navigation, engineering, or construction tool. Scenario reductions are screening estimates—not forecasts or guaranteed outcomes. Correlation does not imply causation. Thirty canopy percentages come from the City of Phoenix 2022 Shade Study sample; other contextual scenario fields are deterministic and labeled. Current FortyGuard API coverage is limited to the United States.
+KAIRO is a hackathon decision-support prototype. It is **not** a certified safety, health, navigation, engineering, or construction tool. Scenario reductions are screening estimates, not forecasts or guaranteed outcomes. Correlation does not imply causation. Thirty canopy percentages come from the City of Phoenix 2022 Shade Study sample; other contextual scenario fields are deterministic and labeled. Current FortyGuard API coverage is limited to the United States.
 
 ## Team
 

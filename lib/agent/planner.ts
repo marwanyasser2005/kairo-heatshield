@@ -94,7 +94,7 @@ export function answerAnalyst(question: string): AnalystAnswer {
   if (trace.intent === "simulation") {
     return {
       title: "Screening cooling simulation",
-      answer: `A 20-point canopy increase on ${top.name} projects a screening reduction in the order of 1–2°C, scaled down where existing canopy is already high. This is a screening estimate with a wide uncertainty band — not a forecast. Open the Cooling Lab to adjust the full package.`,
+      answer: `A 20-point canopy increase on ${top.name} projects a screening reduction in the order of 1 to 2°C, scaled down where existing canopy is already high. This is a screening estimate with a wide uncertainty band, not a forecast. Open the Cooling Lab to adjust the full package.`,
       evidence: [`Baseline ${top.observed.temperatureC.toFixed(1)}°C`, `Current canopy ${top.urban.vegetationPct.toFixed(1)}%`, `Tool: simulateScenario() returns a screening range, never a guaranteed outcome`],
       tools: trace.selectedTools,
       trace,

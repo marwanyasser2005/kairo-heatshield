@@ -14,9 +14,11 @@ interface HeatMapProps {
   onSelect: (id: string) => void;
   className?: string;
   presentation?: boolean;
+  initialLayerMode?: LayerMode;
+  onOpenCanopyScenario?: () => void;
 }
 
-type LayerMode = "heat" | "vegetation";
+export type LayerMode = "heat" | "vegetation";
 type Bounds = { west: number; east: number; south: number; north: number };
 
 const HEAT_COLORS = ["#123247", "#0e7490", "#22d3ee", "#facc15", "#fb923c", "#dc2626"];
@@ -60,14 +62,16 @@ function pointInPolygon(point: [number, number], ring: number[][]) {
   return inside;
 }
 
-export default function HeatMap({ zones, hotspots, selectedId, onSelect, className, presentation = false }: HeatMapProps) {
+export default function HeatMap({ zones, hotspots, selectedId, onSelect, className, presentation = false, initialLayerMode = "heat", onOpenCanopyScenario }: HeatMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const frameRef = useRef<DOMRect | null>(null);
-  const [layerMode, setLayerMode] = useState<LayerMode>("heat");
+  const [layerMode, setLayerMode] = useState<LayerMode>(initialLayerMode);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [inspectedId, setInspectedId] = useState<string | null>(null);
   const selectedZone = zones.features.find((zone) => zone.properties.id === selectedId);
   const isLive = zones.features.some((zone) => zone.properties.source.includes("FortyGuard Temperature API"));
   const activeLayerMode: LayerMode = isLive ? "heat" : layerMode;
+  const activeInspectionId = isLive ? inspectedId ?? hoveredId : selectedId ?? hoveredId;
+  const inspectedZone = zones.features.find((zone) => zone.properties.id === activeInspectionId);
   const bounds = useMemo(() => collectionBounds(zones), [zones]);
   const temperatures = useMemo(() => zones.features.map((zone) => zone.properties.observed.temperatureC), [zones]);
   const canopyValues = useMemo(() => zones.features.map((zone) => zone.properties.urban.vegetationPct), [zones]);
@@ -86,7 +90,6 @@ export default function HeatMap({ zones, hotspots, selectedId, onSelect, classNa
 
     const render = () => {
       const rect = canvas.getBoundingClientRect();
-      frameRef.current = rect;
       const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
       const width = Math.max(1, Math.round(rect.width * pixelRatio));
       const height = Math.max(1, Math.round(rect.height * pixelRatio));
@@ -141,12 +144,10 @@ export default function HeatMap({ zones, hotspots, selectedId, onSelect, classNa
         context.globalAlpha = isLive ? 0.94 : 0.9;
         context.fill();
         context.globalAlpha = 1;
-        context.lineWidth = zone.properties.id === selectedId || zone.properties.id === hoveredId ? 2.5 : isLive ? 0.45 : 1;
-        context.strokeStyle = zone.properties.id === selectedId
+        context.lineWidth = zone.properties.id === activeInspectionId ? 2.5 : isLive ? 0.45 : 1;
+        context.strokeStyle = zone.properties.id === activeInspectionId
           ? "rgba(255,255,255,.98)"
-          : zone.properties.id === hoveredId
-            ? "rgba(103,232,249,.95)"
-            : isLive ? "rgba(255,255,255,.18)" : "rgba(255,255,255,.24)";
+          : isLive ? "rgba(255,255,255,.18)" : "rgba(255,255,255,.24)";
         context.stroke();
       }
 
@@ -171,10 +172,10 @@ export default function HeatMap({ zones, hotspots, selectedId, onSelect, classNa
     const observer = new ResizeObserver(render);
     observer.observe(canvas);
     return () => observer.disconnect();
-  }, [activeLayerMode, bounds, canopyDomain, hoveredId, hotspots, isLive, presentation, selectedId, temperatureDomain, zones]);
+  }, [activeInspectionId, activeLayerMode, bounds, canopyDomain, hotspots, isLive, presentation, temperatureDomain, zones]);
 
   const pointerCoordinate = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    const rect = frameRef.current ?? event.currentTarget.getBoundingClientRect();
+    const rect = event.currentTarget.getBoundingClientRect();
     const padding = presentation ? 42 : Math.min(58, Math.max(28, rect.width * 0.055));
     const plotWidth = Math.max(1, rect.width - padding * 2);
     const plotHeight = Math.max(1, rect.height - padding * 2);
@@ -195,8 +196,8 @@ export default function HeatMap({ zones, hotspots, selectedId, onSelect, classNa
   const heatMinimum = temperatureDomain[0];
   const heatMaximum = temperatureDomain[1];
   const legend = activeLayerMode === "heat"
-    ? `${heatMinimum.toFixed(isLive ? 2 : 1)}–${heatMaximum.toFixed(isLive ? 2 : 1)}°C`
-    : `${canopyDomain[0].toFixed(0)}–${canopyDomain[1].toFixed(0)}% canopy`;
+    ? `${heatMinimum.toFixed(isLive ? 2 : 1)} to ${heatMaximum.toFixed(isLive ? 2 : 1)}°C`
+    : `${canopyDomain[0].toFixed(0)} to ${canopyDomain[1].toFixed(0)}% canopy`;
 
   return (
     <div className={cn("relative min-h-[430px] overflow-hidden rounded-2xl border border-[var(--border-strong)] bg-[#030708] shadow-[var(--shadow-elevated)]", className)}>
@@ -206,19 +207,16 @@ export default function HeatMap({ zones, hotspots, selectedId, onSelect, classNa
         role="img"
         aria-label={`${isLive ? "Verified FortyGuard TCM" : "Phoenix resilience scenario"} choropleth. ${zones.features.length.toLocaleString("en-US")} zones. ${legend}.`}
         onPointerMove={(event) => {
-          if (isLive) {
-            event.currentTarget.style.cursor = "crosshair";
-            return;
-          }
           const zone = zoneAtPointer(event);
           setHoveredId(zone?.properties.id ?? null);
-          event.currentTarget.style.cursor = zone ? "pointer" : "crosshair";
+          event.currentTarget.style.cursor = zone ? (isLive ? "help" : "pointer") : "crosshair";
         }}
         onPointerLeave={() => setHoveredId(null)}
         onClick={(event) => {
-          if (isLive) return;
           const zone = zoneAtPointer(event);
-          if (zone) onSelect(zone.properties.id);
+          if (!zone) return;
+          if (isLive) setInspectedId(zone.properties.id);
+          else onSelect(zone.properties.id);
         }}
       />
 
@@ -228,8 +226,17 @@ export default function HeatMap({ zones, hotspots, selectedId, onSelect, classNa
       <span className="pointer-events-none absolute bottom-3 right-3 z-10 size-5 border-b-2 border-r-2 border-orange-400/60" />
 
       <div className="absolute left-5 top-5 z-10 flex gap-1 rounded-xl border border-[var(--border-strong)] bg-[var(--surface-raised)]/95 p-1.5 shadow-2xl backdrop-blur-xl">
-        <Button size="sm" variant={activeLayerMode === "heat" ? "primary" : "secondary"} onClick={() => setLayerMode("heat")}><Flame className="size-3.5" />Heat</Button>
-        <Button size="sm" variant={activeLayerMode === "vegetation" ? "primary" : "secondary"} onClick={() => setLayerMode("vegetation")} disabled={isLive} title={isLive ? "Canopy was not returned by this FortyGuard activity." : "Show City of Phoenix canopy sample"}><Leaf className="size-3.5" />Canopy</Button>
+        <Button size="sm" variant={activeLayerMode === "heat" ? "primary" : "secondary"} onClick={() => setLayerMode("heat")} aria-pressed={activeLayerMode === "heat"}><Flame className="size-3.5" />Heat</Button>
+        <Button
+          size="sm"
+          variant={activeLayerMode === "vegetation" ? "primary" : "secondary"}
+          onClick={() => isLive ? onOpenCanopyScenario?.() : setLayerMode("vegetation")}
+          aria-pressed={activeLayerMode === "vegetation"}
+          aria-label={isLive ? "Open the labeled Phoenix canopy scenario" : "Show City of Phoenix canopy sample"}
+          title={isLive ? "Open the labeled Phoenix canopy scenario" : "Show City of Phoenix canopy sample"}
+        >
+          <Leaf className="size-3.5" />Canopy{isLive && <span className="hidden text-[9px] font-medium text-zinc-400 sm:inline">Scenario</span>}
+        </Button>
       </div>
 
       <div className="absolute right-5 top-5 z-10 hidden items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-raised)]/92 px-3 py-2 backdrop-blur-lg sm:flex">
@@ -239,10 +246,19 @@ export default function HeatMap({ zones, hotspots, selectedId, onSelect, classNa
 
       <div className="absolute bottom-5 left-5 z-10 rounded-lg border border-[var(--border)] bg-[var(--surface-raised)]/95 px-3 py-2 backdrop-blur-sm">
         <div className="flex items-center gap-2"><MapPinned className="size-3.5 shrink-0 text-cyan-200" /><span className={cn("h-1.5 w-20 rounded-full sm:w-24", activeLayerMode === "heat" ? "bg-gradient-to-r from-[#123247] via-yellow-400 to-red-600" : "bg-gradient-to-r from-amber-950 via-lime-600 to-green-700")} /><span className="font-mono text-[10px] font-bold uppercase tracking-[.12em] text-zinc-200">{legend}</span></div>
-        {isLive && <p className="mt-1.5 text-[10px] leading-4 text-zinc-400">Relative scale across this activity · 2 m air temperature</p>}
+        {isLive && <p className="mt-1.5 text-[10px] leading-4 text-zinc-300">Relative scale within this activity · 2 m air temperature</p>}
       </div>
 
-      {isLive && <div className="absolute bottom-5 right-5 z-10 hidden max-w-64 rounded-lg border border-white/[0.08] bg-black/70 px-3 py-2 text-right text-[10px] leading-4 text-zinc-400 backdrop-blur-sm md:block">Canopy and urban context are unavailable in this TCM response and are intentionally hidden.</div>}
+      {isLive && inspectedZone && (
+        <div className="absolute bottom-24 right-5 z-10 w-52 max-w-[calc(100%-2.5rem)] rounded-xl border border-cyan-300/20 bg-[#071016]/95 p-3 shadow-2xl backdrop-blur-xl" aria-live="polite">
+          <p className="text-[9px] font-black uppercase tracking-[.16em] text-cyan-200">Inspected temperature tile</p>
+          <div className="mt-2 flex items-end justify-between gap-3">
+            <p className="metric-number text-2xl font-black text-white">{inspectedZone.properties.observed.temperatureC.toFixed(2)}°C</p>
+            <p className="truncate font-mono text-[9px] text-zinc-500">{inspectedZone.properties.id}</p>
+          </div>
+          <p className="mt-1 text-[10px] leading-4 text-zinc-400">Verified FortyGuard TCM value. Select another tile to inspect it.</p>
+        </div>
+      )}
 
       {selectedZone && !isLive && (
         <div className="absolute bottom-20 right-5 z-10 hidden w-56 rounded-xl border border-[var(--border-strong)] bg-[var(--surface-raised)]/95 p-4 shadow-2xl backdrop-blur-xl md:block">

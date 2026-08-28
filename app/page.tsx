@@ -32,7 +32,7 @@ const proof = [
 const workflow = [
   { step: "01", title: "See", text: "Ingest street-level air temperature and reveal the pattern a city average hides.", icon: Eye },
   { step: "02", title: "Explain", text: "Connect heat with canopy, land cover, density, and the surrounding urban form.", icon: Layers3 },
-  { step: "03", title: "Prioritize", text: "Rank zones with a transparent exposure model—every score keeps its evidence.", icon: BarChart3 },
+  { step: "03", title: "Prioritize", text: "Rank zones with a transparent exposure model. Every score keeps its evidence.", icon: BarChart3 },
   { step: "04", title: "Act", text: "Turn the finding into an assessment brief a city team can take into the field.", icon: Route },
 ];
 
@@ -84,7 +84,7 @@ export default function LandingPage() {
               <span className="mt-2 block bg-gradient-to-r from-cyan-100 via-cyan-300 to-cyan-500 bg-clip-text text-transparent">Know what to fix first.</span>
             </h1>
             <p className="mt-7 max-w-xl text-[1.05rem] leading-8 text-zinc-300 lg:text-lg">
-              KAIRO turns street-level temperature into a ranked action plan for city teams—showing where exposure concentrates, what amplifies it, and which places deserve attention first.
+              KAIRO turns street-level temperature into a ranked action plan for city teams. It shows where exposure concentrates, what amplifies it, and which places deserve attention first.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link href="/dashboard" className={cn(buttonVariants({ size: "lg" }), "min-h-12 px-6")}>Explore Phoenix <ArrowRight className="size-4" /></Link>
@@ -143,7 +143,7 @@ export default function LandingPage() {
             <h2 className="mt-5 max-w-3xl text-4xl font-black tracking-[-.05em] sm:text-5xl lg:text-7xl">A city average hides the block that needs help.</h2>
           </div>
           <div className="grid gap-px overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.08] sm:grid-cols-3">
-            {[{ value: "01", title: "Heat is local", text: "Two nearby streets can create very different exposure." }, { value: "02", title: "Causes overlap", text: "Canopy, surfaces, density, and time all shape the signal." }, { value: "03", title: "Budgets are finite", text: "Cities need a defensible order of operations—not more layers." }].map((item) => <article key={item.value} className="bg-[#0d1214] p-6 lg:p-8"><p className="font-mono text-xs text-cyan-300">{item.value}</p><h3 className="mt-12 text-lg font-bold">{item.title}</h3><p className="mt-3 text-sm leading-6 text-zinc-500">{item.text}</p></article>)}
+            {[{ value: "01", title: "Heat is local", text: "Two nearby streets can create very different exposure." }, { value: "02", title: "Causes overlap", text: "Canopy, surfaces, density, and time all shape the signal." }, { value: "03", title: "Budgets are finite", text: "Cities need a defensible order of operations, not more layers." }].map((item) => <article key={item.value} className="bg-[#0d1214] p-6 lg:p-8"><p className="font-mono text-xs text-cyan-300">{item.value}</p><h3 className="mt-12 text-lg font-bold">{item.title}</h3><p className="mt-3 text-sm leading-6 text-zinc-500">{item.text}</p></article>)}
           </div>
         </div>
       </section>
@@ -170,7 +170,7 @@ export default function LandingPage() {
           <div className="flex flex-col justify-center p-7 sm:p-10 lg:p-14">
             <p className="section-kicker">Decision simulation</p>
             <h2 className="mt-5 text-4xl font-black tracking-[-.05em] sm:text-5xl">The output is a choice, not a chart.</h2>
-            <p className="mt-6 text-base leading-7 text-zinc-400">KAIRO does not pretend to prescribe a construction project from a browser. It identifies the places and hypotheses worth validating next—then packages the evidence for planners, resilience teams, and field partners.</p>
+            <p className="mt-6 text-base leading-7 text-zinc-400">KAIRO does not pretend to prescribe a construction project from a browser. It identifies the places and hypotheses worth validating next, then packages the evidence for planners, resilience teams, and field partners.</p>
             <div className="mt-10 space-y-3">
               {[{ icon: TreePine, title: "Canopy opportunity", meta: "Validate shade gap along pedestrian routes" }, { icon: Building2, title: "Roof and surface audit", meta: "Inspect high-persistence parcels first" }, { icon: Sparkles, title: "Cooling pilot", meta: "Compare impact before scaling investment" }].map(({ icon: Icon, title, meta }, index) => <div key={title} className="flex items-center gap-4 rounded-xl border border-white/[0.08] bg-white/[0.025] p-4"><span className="grid size-10 shrink-0 place-items-center rounded-lg bg-cyan-300/[0.06] text-cyan-200"><Icon className="size-5" /></span><div className="min-w-0"><div className="flex items-center gap-2"><span className="font-mono text-[10px] text-zinc-600">0{index + 1}</span><p className="font-semibold text-zinc-100">{title}</p></div><p className="mt-1 text-xs leading-5 text-zinc-500">{meta}</p></div></div>)}
             </div>
@@ -193,7 +193,7 @@ export default function LandingPage() {
         <div className="relative mx-auto max-w-5xl text-center">
           <p className="section-kicker justify-center">Phoenix operating picture</p>
           <h2 className="mt-6 text-balance text-5xl font-black tracking-[-.06em] sm:text-7xl lg:text-8xl">Start with the hottest question.</h2>
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-zinc-400">Where should a city investigate first—and what evidence supports that choice?</p>
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-zinc-400">Where should a city investigate first, and what evidence supports that choice?</p>
           <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row"><Link href="/dashboard" className={cn(buttonVariants({ size: "lg" }), "min-h-12 px-7")}>{capabilities.configured ? "Run the live experience" : "Open the experience"} <ArrowRight className="size-4" /></Link><Link href="/presentation" className={cn(buttonVariants({ variant: "secondary", size: "lg" }), "min-h-12 px-7")}>Open presentation mode</Link></div>
         </div>
       </section>
