@@ -155,7 +155,7 @@ KAIRO is a hackathon decision-support prototype. It is **not** a certified safet
 
 ## Team
 
-Built by **Marwan Abdelghaffar and team** for FortyGuard Global AI Hackathon ’26.
+Built by **Marwan Abdelghaffar and Basel Ziada** for FortyGuard Global AI Hackathon ’26.
 
 <div align="center">
   <strong>KAIRO HeatShield</strong><br />
